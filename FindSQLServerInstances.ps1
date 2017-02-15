@@ -25,5 +25,11 @@ if ($DomainName -eq $null) {
 
 New-Item -ItemType file -Force -Path $ScriptConfiguration.OutputPath | Out-Null
 ForEach ($OUPath in $ScriptConfiguration.OUPaths) {
-    Get-ADComputer -SearchBase $OUPath -Filter {(enabled -eq "true") -and -(OperatingSystem -Like "Windows *")} -SearchScope $OUPath.SearchScope -ResultPageSize 10000 -Server $DomainName | ForEach-Object{try{$currentDate = Get-Date; $recentError = $null; Get-Service -ComputerName $_.Name -ErrorVariable recentError -ErrorAction SilentlyContinue | Where-Object {$_.name -eq "MSSQLSERVER" -or $_.name -like "MSSQL$*" -or $_.displayName -like "SQL Server (*"};}catch{Write-Warning $_;Out-File -FilePath $ErrorLogPath -Append -InputObject $currentDate; Out-File -FilePath $ErrorLogPath -Append -InputObject $_};}| Select-Object MachineName, DisplayName, Status | Export-Csv -NoClobber -NoTypeInformation -Path $OutputPath -Append
+    $server = $nil 
+    if ($OUPath.Server) {
+        $server = $OUPath.Server 
+    } else {
+        $server = $ScriptConfiguration.DomainName
+    }
+    Get-ADComputer -SearchBase $OUPath.Path -Filter {(enabled -eq $true) -and (OperatingSystem -Like "Windows *")} -SearchScope $OUPath.SearchScope -ResultPageSize 10000 -Server $server | ForEach-Object{try{$currentDate = Get-Date; $recentError = $null; Get-Service -ComputerName $_.Name -ErrorVariable recentError -ErrorAction SilentlyContinue | Where-Object {$_.name -eq "MSSQLSERVER" -or $_.name -like "MSSQL$*" -or $_.displayName -like "SQL Server (*"};}catch{Write-Warning $_;Out-File -FilePath $ErrorLogPath -Append -InputObject $currentDate; Out-File -FilePath $ErrorLogPath -Append -InputObject $_};}| Select-Object MachineName, DisplayName, Status | Export-Csv -NoClobber -NoTypeInformation -Path $ScriptConfiguration.OutputPath -Append
 }
