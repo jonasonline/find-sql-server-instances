@@ -1,1 +1,1 @@
-# find-sql-server-instavces #
+# find-sql-server-instances #
