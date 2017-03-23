@@ -4,6 +4,7 @@
         {"Path": "OU=OU NAME,OU=OU NAME,DC=domain,DC=com", "SearchScope": 1, "Server": "dc01.domain.com"},
         {"Path": "OU=OU NAME,OU=OU NAME,DC=domain,DC=com", "SearchScope": 2}
     ],
+    "OperatingSystemSearchText": "Windows Server*",
     "OutputPath": "..\\DataStore\\SQLServerInstances.csv",
     "ErrorLogPath": "error.log"
 }

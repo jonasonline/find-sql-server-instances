@@ -31,5 +31,10 @@ ForEach ($OUPath in $ScriptConfiguration.OUPaths) {
     } else {
         $server = $ScriptConfiguration.DomainName
     }
-    Get-ADComputer -SearchBase $OUPath.Path -Filter {(enabled -eq $true) -and (OperatingSystem -Like "Windows *")} -SearchScope $OUPath.SearchScope -ResultPageSize 10000 -Server $server | ForEach-Object{try{$currentDate = Get-Date; $recentError = $null; Get-Service -ComputerName $_.Name -ErrorVariable recentError -ErrorAction SilentlyContinue | Where-Object {$_.name -eq "MSSQLSERVER" -or $_.name -like "MSSQL$*" -or $_.displayName -like "SQL Server (*"};}catch{Write-Warning $_;Out-File -FilePath $ScriptConfiguration.ErrorLogPath -Append -InputObject $currentDate; Out-File -FilePath $ScriptConfiguration.ErrorLogPath -Append -InputObject $_};}| Select-Object MachineName, DisplayName, Status | Export-Csv -NoClobber -NoTypeInformation -Path $ScriptConfiguration.OutputPath -Append
+    if ($ScriptConfiguration.OperatingSystemSearchText -eq $null) {
+        $operatingSystemSearchPattern = "Windows Server*"   
+    } else {
+        $operatingSystemSearchPattern = $ScriptConfiguration.OperatingSystemSearchText
+    }
+    Get-ADComputer -SearchBase $OUPath.Path -Filter {(enabled -eq $true) -and (OperatingSystem -Like $operatingSystemSearchPattern)} -SearchScope $OUPath.SearchScope -ResultPageSize 10000 -Server $server | ForEach-Object{try{$currentDate = Get-Date; $recentError = $null; Get-Service -ComputerName $_.Name -ErrorVariable recentError -ErrorAction SilentlyContinue | Where-Object {$_.name -eq "MSSQLSERVER" -or $_.name -like "MSSQL$*" -or $_.displayName -like "SQL Server (*"};}catch{Write-Warning $_;Out-File -FilePath $ScriptConfiguration.ErrorLogPath -Append -InputObject $currentDate; Out-File -FilePath $ScriptConfiguration.ErrorLogPath -Append -InputObject $_};}| Select-Object MachineName, DisplayName, Status | Export-Csv -NoClobber -NoTypeInformation -Path $ScriptConfiguration.OutputPath -Append
 }
